@@ -1,4 +1,4 @@
-import { computeWeekCaja, fuelTotal, type DailyRecord, type Settlement } from "@/lib/finance";
+import { computeWeekCaja, fuelTotal, type Settlement } from "@/lib/finance";
 import { fmt } from "@/lib/money";
 import { dayName, formatShort, formatWeekRange } from "@/lib/dates";
 import { StatusBadge, cashTone, toneText } from "./primitives";
@@ -19,10 +19,6 @@ function Cell({ label, value, tone }: { label: string; value: string; tone?: Ret
   );
 }
 
-function DayBody({ r }: { r?: DailyRecord & {} } & { caja?: ReturnType<typeof computeWeekCaja>[string] }) {
-  return null;
-}
-void DayBody;
 
 /** Detailed per-day cards (mobile). */
 export function ReportDetailed({ s }: { s: Settlement }) {

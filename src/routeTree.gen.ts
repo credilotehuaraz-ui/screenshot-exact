@@ -10,33 +10,132 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConductorRouteImport } from './routes/conductor'
+import { Route as ConductorIndexRouteImport } from './routes/conductor.index'
+import { Route as ConductorCuentaRouteImport } from './routes/conductor.cuenta'
+import { Route as ConductorHistorialRouteImport } from './routes/conductor.historial'
+import { Route as ConductorInformeRouteImport } from './routes/conductor.informe'
+import { Route as ConductorLiquidacionRouteImport } from './routes/conductor.liquidacion'
+import { Route as ConductorRegistrarRouteImport } from './routes/conductor.registrar'
+import { Route as ConductorCuadreFechaRouteImport } from './routes/conductor.cuadre.$fecha'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConductorRoute = ConductorRouteImport.update({
+  id: '/conductor',
+  path: '/conductor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConductorIndexRoute = ConductorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConductorRoute,
+} as any)
+const ConductorCuentaRoute = ConductorCuentaRouteImport.update({
+  id: '/cuenta',
+  path: '/cuenta',
+  getParentRoute: () => ConductorRoute,
+} as any)
+const ConductorHistorialRoute = ConductorHistorialRouteImport.update({
+  id: '/historial',
+  path: '/historial',
+  getParentRoute: () => ConductorRoute,
+} as any)
+const ConductorInformeRoute = ConductorInformeRouteImport.update({
+  id: '/informe',
+  path: '/informe',
+  getParentRoute: () => ConductorRoute,
+} as any)
+const ConductorLiquidacionRoute = ConductorLiquidacionRouteImport.update({
+  id: '/liquidacion',
+  path: '/liquidacion',
+  getParentRoute: () => ConductorRoute,
+} as any)
+const ConductorRegistrarRoute = ConductorRegistrarRouteImport.update({
+  id: '/registrar',
+  path: '/registrar',
+  getParentRoute: () => ConductorRoute,
+} as any)
+const ConductorCuadreFechaRoute = ConductorCuadreFechaRouteImport.update({
+  id: '/cuadre/$fecha',
+  path: '/cuadre/$fecha',
+  getParentRoute: () => ConductorRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/conductor': typeof ConductorRouteWithChildren
+  '/conductor/cuenta': typeof ConductorCuentaRoute
+  '/conductor/historial': typeof ConductorHistorialRoute
+  '/conductor/informe': typeof ConductorInformeRoute
+  '/conductor/liquidacion': typeof ConductorLiquidacionRoute
+  '/conductor/registrar': typeof ConductorRegistrarRoute
+  '/conductor/': typeof ConductorIndexRoute
+  '/conductor/cuadre/$fecha': typeof ConductorCuadreFechaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/conductor/cuenta': typeof ConductorCuentaRoute
+  '/conductor/historial': typeof ConductorHistorialRoute
+  '/conductor/informe': typeof ConductorInformeRoute
+  '/conductor/liquidacion': typeof ConductorLiquidacionRoute
+  '/conductor/registrar': typeof ConductorRegistrarRoute
+  '/conductor': typeof ConductorIndexRoute
+  '/conductor/cuadre/$fecha': typeof ConductorCuadreFechaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/conductor': typeof ConductorRouteWithChildren
+  '/conductor/cuenta': typeof ConductorCuentaRoute
+  '/conductor/historial': typeof ConductorHistorialRoute
+  '/conductor/informe': typeof ConductorInformeRoute
+  '/conductor/liquidacion': typeof ConductorLiquidacionRoute
+  '/conductor/registrar': typeof ConductorRegistrarRoute
+  '/conductor/': typeof ConductorIndexRoute
+  '/conductor/cuadre/$fecha': typeof ConductorCuadreFechaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/conductor'
+    | '/conductor/cuenta'
+    | '/conductor/historial'
+    | '/conductor/informe'
+    | '/conductor/liquidacion'
+    | '/conductor/registrar'
+    | '/conductor/'
+    | '/conductor/cuadre/$fecha'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/conductor/cuenta'
+    | '/conductor/historial'
+    | '/conductor/informe'
+    | '/conductor/liquidacion'
+    | '/conductor/registrar'
+    | '/conductor'
+    | '/conductor/cuadre/$fecha'
+  id:
+    | '__root__'
+    | '/'
+    | '/conductor'
+    | '/conductor/cuenta'
+    | '/conductor/historial'
+    | '/conductor/informe'
+    | '/conductor/liquidacion'
+    | '/conductor/registrar'
+    | '/conductor/'
+    | '/conductor/cuadre/$fecha'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConductorRoute: typeof ConductorRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +147,92 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conductor': {
+      id: '/conductor'
+      path: '/conductor'
+      fullPath: '/conductor'
+      preLoaderRoute: typeof ConductorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conductor/': {
+      id: '/conductor/'
+      path: '/'
+      fullPath: '/conductor/'
+      preLoaderRoute: typeof ConductorIndexRouteImport
+      parentRoute: typeof ConductorRoute
+    }
+    '/conductor/cuenta': {
+      id: '/conductor/cuenta'
+      path: '/cuenta'
+      fullPath: '/conductor/cuenta'
+      preLoaderRoute: typeof ConductorCuentaRouteImport
+      parentRoute: typeof ConductorRoute
+    }
+    '/conductor/historial': {
+      id: '/conductor/historial'
+      path: '/historial'
+      fullPath: '/conductor/historial'
+      preLoaderRoute: typeof ConductorHistorialRouteImport
+      parentRoute: typeof ConductorRoute
+    }
+    '/conductor/informe': {
+      id: '/conductor/informe'
+      path: '/informe'
+      fullPath: '/conductor/informe'
+      preLoaderRoute: typeof ConductorInformeRouteImport
+      parentRoute: typeof ConductorRoute
+    }
+    '/conductor/liquidacion': {
+      id: '/conductor/liquidacion'
+      path: '/liquidacion'
+      fullPath: '/conductor/liquidacion'
+      preLoaderRoute: typeof ConductorLiquidacionRouteImport
+      parentRoute: typeof ConductorRoute
+    }
+    '/conductor/registrar': {
+      id: '/conductor/registrar'
+      path: '/registrar'
+      fullPath: '/conductor/registrar'
+      preLoaderRoute: typeof ConductorRegistrarRouteImport
+      parentRoute: typeof ConductorRoute
+    }
+    '/conductor/cuadre/$fecha': {
+      id: '/conductor/cuadre/$fecha'
+      path: '/cuadre/$fecha'
+      fullPath: '/conductor/cuadre/$fecha'
+      preLoaderRoute: typeof ConductorCuadreFechaRouteImport
+      parentRoute: typeof ConductorRoute
+    }
   }
 }
 
+interface ConductorRouteChildren {
+  ConductorCuentaRoute: typeof ConductorCuentaRoute
+  ConductorHistorialRoute: typeof ConductorHistorialRoute
+  ConductorInformeRoute: typeof ConductorInformeRoute
+  ConductorLiquidacionRoute: typeof ConductorLiquidacionRoute
+  ConductorRegistrarRoute: typeof ConductorRegistrarRoute
+  ConductorIndexRoute: typeof ConductorIndexRoute
+  ConductorCuadreFechaRoute: typeof ConductorCuadreFechaRoute
+}
+
+const ConductorRouteChildren: ConductorRouteChildren = {
+  ConductorCuentaRoute: ConductorCuentaRoute,
+  ConductorHistorialRoute: ConductorHistorialRoute,
+  ConductorInformeRoute: ConductorInformeRoute,
+  ConductorLiquidacionRoute: ConductorLiquidacionRoute,
+  ConductorRegistrarRoute: ConductorRegistrarRoute,
+  ConductorIndexRoute: ConductorIndexRoute,
+  ConductorCuadreFechaRoute: ConductorCuadreFechaRoute,
+}
+
+const ConductorRouteWithChildren = ConductorRoute._addFileChildren(
+  ConductorRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConductorRoute: ConductorRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

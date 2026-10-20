@@ -10,13 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ConductorRouteImport } from './routes/conductor'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminConductoresRouteImport } from './routes/admin.conductores'
+import { Route as AdminInformesRouteImport } from './routes/admin.informes'
+import { Route as AdminRegistroRouteImport } from './routes/admin.registro'
 import { Route as ConductorIndexRouteImport } from './routes/conductor.index'
 import { Route as ConductorCuentaRouteImport } from './routes/conductor.cuenta'
 import { Route as ConductorHistorialRouteImport } from './routes/conductor.historial'
 import { Route as ConductorInformeRouteImport } from './routes/conductor.informe'
 import { Route as ConductorLiquidacionRouteImport } from './routes/conductor.liquidacion'
 import { Route as ConductorRegistrarRouteImport } from './routes/conductor.registrar'
+import { Route as AdminConductoresIdRouteImport } from './routes/admin.conductores.$id'
 import { Route as ConductorCuadreFechaRouteImport } from './routes/conductor.cuadre.$fecha'
 
 const IndexRoute = IndexRouteImport.update({
@@ -24,10 +30,35 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConductorRoute = ConductorRouteImport.update({
   id: '/conductor',
   path: '/conductor',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConductoresRoute = AdminConductoresRouteImport.update({
+  id: '/conductores',
+  path: '/conductores',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInformesRoute = AdminInformesRouteImport.update({
+  id: '/informes',
+  path: '/informes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRegistroRoute = AdminRegistroRouteImport.update({
+  id: '/registro',
+  path: '/registro',
+  getParentRoute: () => AdminRoute,
 } as any)
 const ConductorIndexRoute = ConductorIndexRouteImport.update({
   id: '/',
@@ -59,6 +90,11 @@ const ConductorRegistrarRoute = ConductorRegistrarRouteImport.update({
   path: '/registrar',
   getParentRoute: () => ConductorRoute,
 } as any)
+const AdminConductoresIdRoute = AdminConductoresIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminConductoresRoute,
+} as any)
 const ConductorCuadreFechaRoute = ConductorCuadreFechaRouteImport.update({
   id: '/cuadre/$fecha',
   path: '/cuadre/$fecha',
@@ -67,74 +103,109 @@ const ConductorCuadreFechaRoute = ConductorCuadreFechaRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/conductor': typeof ConductorRouteWithChildren
+  '/admin/conductores': typeof AdminConductoresRouteWithChildren
+  '/admin/informes': typeof AdminInformesRoute
+  '/admin/registro': typeof AdminRegistroRoute
   '/conductor/cuenta': typeof ConductorCuentaRoute
   '/conductor/historial': typeof ConductorHistorialRoute
   '/conductor/informe': typeof ConductorInformeRoute
   '/conductor/liquidacion': typeof ConductorLiquidacionRoute
   '/conductor/registrar': typeof ConductorRegistrarRoute
+  '/admin/': typeof AdminIndexRoute
   '/conductor/': typeof ConductorIndexRoute
+  '/admin/conductores/$id': typeof AdminConductoresIdRoute
   '/conductor/cuadre/$fecha': typeof ConductorCuadreFechaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/conductores': typeof AdminConductoresRouteWithChildren
+  '/admin/informes': typeof AdminInformesRoute
+  '/admin/registro': typeof AdminRegistroRoute
   '/conductor/cuenta': typeof ConductorCuentaRoute
   '/conductor/historial': typeof ConductorHistorialRoute
   '/conductor/informe': typeof ConductorInformeRoute
   '/conductor/liquidacion': typeof ConductorLiquidacionRoute
   '/conductor/registrar': typeof ConductorRegistrarRoute
+  '/admin': typeof AdminIndexRoute
   '/conductor': typeof ConductorIndexRoute
+  '/admin/conductores/$id': typeof AdminConductoresIdRoute
   '/conductor/cuadre/$fecha': typeof ConductorCuadreFechaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/conductor': typeof ConductorRouteWithChildren
+  '/admin/conductores': typeof AdminConductoresRouteWithChildren
+  '/admin/informes': typeof AdminInformesRoute
+  '/admin/registro': typeof AdminRegistroRoute
   '/conductor/cuenta': typeof ConductorCuentaRoute
   '/conductor/historial': typeof ConductorHistorialRoute
   '/conductor/informe': typeof ConductorInformeRoute
   '/conductor/liquidacion': typeof ConductorLiquidacionRoute
   '/conductor/registrar': typeof ConductorRegistrarRoute
+  '/admin/': typeof AdminIndexRoute
   '/conductor/': typeof ConductorIndexRoute
+  '/admin/conductores/$id': typeof AdminConductoresIdRoute
   '/conductor/cuadre/$fecha': typeof ConductorCuadreFechaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/conductor'
+    | '/admin/conductores'
+    | '/admin/informes'
+    | '/admin/registro'
     | '/conductor/cuenta'
     | '/conductor/historial'
     | '/conductor/informe'
     | '/conductor/liquidacion'
     | '/conductor/registrar'
+    | '/admin/'
     | '/conductor/'
+    | '/admin/conductores/$id'
     | '/conductor/cuadre/$fecha'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin/conductores'
+    | '/admin/informes'
+    | '/admin/registro'
     | '/conductor/cuenta'
     | '/conductor/historial'
     | '/conductor/informe'
     | '/conductor/liquidacion'
     | '/conductor/registrar'
+    | '/admin'
     | '/conductor'
+    | '/admin/conductores/$id'
     | '/conductor/cuadre/$fecha'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/conductor'
+    | '/admin/conductores'
+    | '/admin/informes'
+    | '/admin/registro'
     | '/conductor/cuenta'
     | '/conductor/historial'
     | '/conductor/informe'
     | '/conductor/liquidacion'
     | '/conductor/registrar'
+    | '/admin/'
     | '/conductor/'
+    | '/admin/conductores/$id'
     | '/conductor/cuadre/$fecha'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ConductorRoute: typeof ConductorRouteWithChildren
 }
 
@@ -147,12 +218,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/conductor': {
       id: '/conductor'
       path: '/conductor'
       fullPath: '/conductor'
       preLoaderRoute: typeof ConductorRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/conductores': {
+      id: '/admin/conductores'
+      path: '/conductores'
+      fullPath: '/admin/conductores'
+      preLoaderRoute: typeof AdminConductoresRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/informes': {
+      id: '/admin/informes'
+      path: '/informes'
+      fullPath: '/admin/informes'
+      preLoaderRoute: typeof AdminInformesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/registro': {
+      id: '/admin/registro'
+      path: '/registro'
+      fullPath: '/admin/registro'
+      preLoaderRoute: typeof AdminRegistroRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/conductor/': {
       id: '/conductor/'
@@ -196,6 +302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConductorRegistrarRouteImport
       parentRoute: typeof ConductorRoute
     }
+    '/admin/conductores/$id': {
+      id: '/admin/conductores/$id'
+      path: '/$id'
+      fullPath: '/admin/conductores/$id'
+      preLoaderRoute: typeof AdminConductoresIdRouteImport
+      parentRoute: typeof AdminConductoresRoute
+    }
     '/conductor/cuadre/$fecha': {
       id: '/conductor/cuadre/$fecha'
       path: '/cuadre/$fecha'
@@ -205,6 +318,33 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AdminConductoresRouteChildren {
+  AdminConductoresIdRoute: typeof AdminConductoresIdRoute
+}
+
+const AdminConductoresRouteChildren: AdminConductoresRouteChildren = {
+  AdminConductoresIdRoute: AdminConductoresIdRoute,
+}
+
+const AdminConductoresRouteWithChildren =
+  AdminConductoresRoute._addFileChildren(AdminConductoresRouteChildren)
+
+interface AdminRouteChildren {
+  AdminConductoresRoute: typeof AdminConductoresRouteWithChildren
+  AdminInformesRoute: typeof AdminInformesRoute
+  AdminRegistroRoute: typeof AdminRegistroRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminConductoresRoute: AdminConductoresRouteWithChildren,
+  AdminInformesRoute: AdminInformesRoute,
+  AdminRegistroRoute: AdminRegistroRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface ConductorRouteChildren {
   ConductorCuentaRoute: typeof ConductorCuentaRoute
@@ -232,6 +372,7 @@ const ConductorRouteWithChildren = ConductorRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   ConductorRoute: ConductorRouteWithChildren,
 }
 export const routeTree = rootRouteImport

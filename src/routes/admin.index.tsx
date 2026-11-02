@@ -35,7 +35,7 @@ function AdminDashboard() {
       const driverRecs = records.filter((r) => r.driverId === d.id);
       const s = computeSettlement(week, driverRecs, today);
       const driverTxs = cashTransactions.filter((t) => t.driverId === d.id);
-      const netPending = computeNetPendingBalance(s.cajaFinal, driverTxs);
+      const netPending = computeNetPendingBalance(s.cajaFinal, driverTxs, week);
       return { d, s, netPending };
     }),
     [active, records, week, today, cashTransactions],
@@ -48,7 +48,7 @@ function AdminDashboard() {
   const pendingComprobantes = cashTransactions.filter((t) => t.tipo === "devolucion_conductor" && t.estado === "comprobante_enviado");
 
   // Transacciones de solicitud enviadas por conductores (cuando caja es negativa)
-  const pendingRequests = cashTransactions.filter((t) => t.tipo === "devolucion_conductor" && t.estado === "pendiente");
+  const pendingRequests = cashTransactions.filter((t) => t.tipo === "solicitud_conductor" && t.estado === "pendiente");
 
   const handleSendReminderToDriver = () => {
     const cents = parseMoney(montoTx);
@@ -56,10 +56,10 @@ function AdminDashboard() {
     if (!cents || cents <= 0) return toast.error("Ingresa un monto válido.");
 
     const d = drivers.find((x) => x.id === selectedDriverId);
-    sendRefundReminder(selectedDriverId, cents, obsTx);
+    sendRefundReminder(selectedDriverId, cents, obsTx, week);
 
     const montoFormatted = (cents / 100).toFixed(2);
-    const waMsg = encodeURIComponent(`Hola ${d?.nombre}, la Empresa te recuerda efectuar el reembolso de S/ ${montoFormatted} a favor de la Empresa por saldo pendiente de caja chica. Por favor realiza el depósito y envía el comprobante.`);
+    const waMsg = encodeURIComponent(`Hola ${d?.nombre}, la Empresa te recuerda efectuar el reembolso de S/ ${montoFormatted} a favor de la Empresa por la liquidación de la semana del ${week}. Por favor realiza el depósito y envía el comprobante.`);
     window.open(`https://wa.me/51969841802?text=${waMsg}`, "_blank");
 
     toast.success("Recordatorio enviado al conductor", { description: `Se notificó a ${d?.nombre}` });
@@ -74,10 +74,10 @@ function AdminDashboard() {
     if (!cents || cents <= 0) return toast.error("Ingresa un monto válido.");
 
     const d = drivers.find((x) => x.id === selectedDriverId);
-    requestCompanyRefund(selectedDriverId, cents, obsTx);
+    requestCompanyRefund(selectedDriverId, cents, obsTx, week);
 
     const montoFormatted = (cents / 100).toFixed(2);
-    const waMsg = encodeURIComponent(`Hola ${d?.nombre}, la Empresa ha registrado un depósito a tu favor por S/ ${montoFormatted} por devolución de caja chica. Por favor ingresa a tu aplicación para confirmarlo.`);
+    const waMsg = encodeURIComponent(`Hola ${d?.nombre}, la Empresa ha registrado un depósito a tu favor por S/ ${montoFormatted} por la semana del ${week}. Por favor ingresa a tu aplicación para confirmarlo.`);
     window.open(`https://wa.me/51969841802?text=${waMsg}`, "_blank");
 
     toast.success("Depósito registrado", { description: `Notificado a ${d?.nombre} para su confirmación.` });

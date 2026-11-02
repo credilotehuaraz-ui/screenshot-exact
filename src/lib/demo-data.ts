@@ -34,6 +34,7 @@ export type TransactionStatus = "pendiente" | "comprobante_enviado" | "en_revisi
 export interface CashTransaction {
   id: string;
   driverId: string;
+  period_id?: string;
   tipo: TransactionType;
   monto: number;
   estado: TransactionStatus;

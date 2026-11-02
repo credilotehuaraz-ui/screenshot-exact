@@ -30,9 +30,9 @@ function DriverHome() {
 
   const s = useMemo(() => computeSettlement(week, recs, today), [week, recs, today]);
 
-  // Transacciones de caja de este conductor
+  // Transacciones de caja de este conductor filtradas por el periodo de la semana seleccionada
   const driverTxs = useMemo(() => cashTransactions.filter((t) => t.driverId === driver?.id), [cashTransactions, driver?.id]);
-  const netPending = useMemo(() => computeNetPendingBalance(s.cajaFinal, driverTxs), [s.cajaFinal, driverTxs]);
+  const netPending = useMemo(() => computeNetPendingBalance(s.cajaFinal, driverTxs, week), [s.cajaFinal, driverTxs, week]);
 
   const recent = useMemo(() => {
     const sorted = [...recs].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 5);
@@ -45,8 +45,8 @@ function DriverHome() {
   if (!driver) return null;
 
   // Alertas activas
-  const adminReminder = driverTxs.find((t) => t.tipo === "recordatorio_empresa" && t.estado === "pendiente");
-  const adminRefundToConfirm = driverTxs.find((t) => t.tipo === "reembolso_empresa" && t.estado === "pendiente");
+  const adminReminder = driverTxs.find((t) => t.tipo === "recordatorio_empresa" && t.estado === "pendiente" && (!t.period_id || t.period_id === week));
+  const adminRefundToConfirm = driverTxs.find((t) => t.tipo === "reembolso_empresa" && t.estado === "pendiente" && (!t.period_id || t.period_id === week));
 
   const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Lima", hour: "numeric", hour12: false }).format(new Date()));
   const greet = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
@@ -57,9 +57,9 @@ function DriverHome() {
     if (!cents || cents <= 0) return toast.error("Ingresa un monto válido.");
 
     const montoFormatted = (cents / 100).toFixed(2);
-    requestCashReturn(driver.id, cents, obsTx);
+    requestCashReturn(driver.id, cents, obsTx, week);
 
-    const waMsg = encodeURIComponent(`Hola, adjunto captura del depósito de devolución de caja chica de ${driver.nombre} (${driver.placa}) por S/ ${montoFormatted}. ${obsTx ? `Nota: ${obsTx}` : ""}`);
+    const waMsg = encodeURIComponent(`Hola, adjunto captura del depósito de devolución de caja chica de ${driver.nombre} (${driver.placa}) por S/ ${montoFormatted} para la semana del ${week}. ${obsTx ? `Nota: ${obsTx}` : ""}`);
     window.open(`https://wa.me/51969841802?text=${waMsg}`, "_blank");
 
     toast.success("Comprobante enviado a verificación", { description: "Se notificó al administrador." });
@@ -74,9 +74,9 @@ function DriverHome() {
     if (!cents || cents <= 0) return toast.error("Ingresa un monto válido.");
 
     const montoFormatted = (cents / 100).toFixed(2);
-    requestDriverRefund(driver.id, cents, obsTx);
+    requestDriverRefund(driver.id, cents, obsTx, week);
 
-    const waMsg = encodeURIComponent(`Hola, solicito la devolución de caja chica a mi favor para ${driver.nombre} (${driver.placa}) por S/ ${montoFormatted}. ${obsTx ? `Nota: ${obsTx}` : ""}`);
+    const waMsg = encodeURIComponent(`Hola, solicito la devolución de caja chica a mi favor para ${driver.nombre} (${driver.placa}) por S/ ${montoFormatted} para la semana del ${week}. ${obsTx ? `Nota: ${obsTx}` : ""}`);
     window.open(`https://wa.me/51969841802?text=${waMsg}`, "_blank");
 
     toast.success("Solicitud enviada al Administrador", { description: "Se le notificó para que efectúe el depósito." });
@@ -110,7 +110,7 @@ function DriverHome() {
             <div className="flex-1">
               <h3 className="font-extrabold text-sm text-foreground">Recordatorio del Administrador</h3>
               <p className="mt-1 text-xs text-muted-foreground">
-                El Administrador te recuerda efectuar el reembolso de <span className="font-bold text-foreground">S/ {(adminReminder.monto / 100).toFixed(2)}</span> a favor de la Empresa.
+                El Administrador te recuerda efectuar el reembolso de <span className="font-bold text-foreground">S/ {(adminReminder.monto / 100).toFixed(2)}</span> a favor de la Empresa para la semana del {week}.
               </p>
               <div className="mt-3 flex gap-2">
                 <Button size="sm" className="h-8 text-xs font-bold" onClick={() => { setMontoTx((adminReminder.monto / 100).toFixed(2)); setDepositModal(true); }}>
@@ -130,7 +130,7 @@ function DriverHome() {
             <div className="flex-1">
               <h3 className="font-extrabold text-sm text-foreground">Depósito de la Empresa por confirmar</h3>
               <p className="mt-1 text-xs text-muted-foreground">
-                El administrador ha registrado un depósito a tu favor por <span className="font-bold text-foreground">S/ {(adminRefundToConfirm.monto / 100).toFixed(2)}</span>.
+                El administrador ha registrado un depósito a tu favor por <span className="font-bold text-foreground">S/ {(adminRefundToConfirm.monto / 100).toFixed(2)}</span> para la semana del {week}.
               </p>
               <div className="mt-3 flex gap-2">
                 <Button
@@ -164,15 +164,15 @@ function DriverHome() {
         <StatCard className="col-span-2" icon={TrendingUp} label="Producción de la semana" value={fmt(s.produccionTotal)} hint={`${s.diasTrabajados} día(s) trabajado(s)`} />
         <StatCard icon={Coins} label="Ganancia semanal" value={fmt(s.ganancia)} tone="primary" hint={s.definitivo ? "Definitiva" : "Provisional"} />
         <StatCard icon={Wallet} label="Caja chica acumulada" value={fmt(s.cajaFinal)} tone={cashTone(s.cajaFinal)} hint={s.cajaFinal > 0 ? "Debes a la empresa" : s.cajaFinal < 0 ? "Empresa te debe" : "Al día"} />
-        <StatCard icon={Undo2} label="Devolución pendiente" value={fmt(netPending.devolucionPendiente)} tone={netPending.devolucionPendiente > 0 ? "negative" : "default"} hint={netPending.devolucionPendiente > 0 ? "Saldo neto sin verificar" : "Al día"} />
+        <StatCard icon={Undo2} label="Devolución pendiente" value={fmt(netPending.devolucionPendiente)} tone={netPending.devolucionPendiente > 0 ? "negative" : "default"} hint={netPending.devolucionPendiente > 0 ? "Saldo neto de la semana" : "Al día"} />
       </div>
 
-      {/* ACCIONES DINÁMICAS SEGÚN EL SIGNO DE CAJA CHICA */}
+      {/* ACCIONES DINÁMICAS SEGÚN EL SIGNO DE CAJA CHICA DE LA SEMANA */}
       <div className="px-4 pt-3">
         {s.cajaFinal > 0 ? (
           // CASO 1: POSITIVO -> CONDUCTOR DEBE A LA EMPRESA
           <div className="rounded-2xl border border-negative/30 bg-negative-soft p-3.5 text-center space-y-2">
-            <p className="text-xs font-bold text-negative">Debes S/ {(s.cajaFinal / 100).toFixed(2)} a la Empresa</p>
+            <p className="text-xs font-bold text-negative">Debes S/ {(s.cajaFinal / 100).toFixed(2)} a la Empresa (Semana {week})</p>
             <div className="grid grid-cols-2 gap-2">
               <Button size="sm" className="font-bold bg-negative text-negative-foreground hover:bg-negative/90" onClick={() => { setMontoTx((netPending.devolucionPendiente / 100).toFixed(2)); setDepositModal(true); }}>
                 <ArrowUpRight className="mr-1 size-3.5" /> Realizar depósito
@@ -185,7 +185,7 @@ function DriverHome() {
         ) : s.cajaFinal < 0 ? (
           // CASO 2: NEGATIVO -> LA EMPRESA DEBE AL CONDUCTOR
           <div className="rounded-2xl border border-positive/30 bg-positive-soft p-3.5 text-center space-y-2">
-            <p className="text-xs font-bold text-positive">La Empresa te debe S/ {(Math.abs(s.cajaFinal) / 100).toFixed(2)}</p>
+            <p className="text-xs font-bold text-positive">La Empresa te debe S/ {(Math.abs(s.cajaFinal) / 100).toFixed(2)} (Semana {week})</p>
             <Button size="lg" className="w-full font-bold bg-positive text-positive-foreground hover:bg-positive/90" onClick={() => { setMontoTx((netPending.devolucionPendiente / 100).toFixed(2)); setRequestReturnModal(true); }}>
               <ArrowDownLeft className="mr-1 size-4" /> Solicitar devolución al Administrador
             </Button>
@@ -193,7 +193,7 @@ function DriverHome() {
         ) : (
           // CASO 3: CERO -> CAJA CHICA AL DÍA
           <div className="rounded-2xl border border-border bg-card p-3 text-center">
-            <p className="text-xs font-extrabold text-positive">✓ Caja Chica al día: S/ 0.00</p>
+            <p className="text-xs font-extrabold text-positive">✓ Caja Chica al día: S/ 0.00 (Semana {week})</p>
           </div>
         )}
       </div>
@@ -217,7 +217,7 @@ function DriverHome() {
               <p className="flex items-center gap-1.5 font-bold text-foreground mb-1">
                 <AlertCircle className="size-4 text-primary shrink-0" /> Instrucciones de pago
               </p>
-              Realiza el depósito/transferencia a la empresa y envía el comprobante por WhatsApp al administrador para su verificación.
+              Realiza el depósito/transferencia a la empresa para la semana del {week} y envía el comprobante por WhatsApp al administrador para su verificación.
             </div>
 
             <div className="space-y-1.5">

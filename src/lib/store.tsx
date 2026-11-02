@@ -69,10 +69,10 @@ interface AppCtx extends PersistedState {
   saveAdminUser: (a: Omit<AdminUser, "id" | "creado" | "password"> & { id?: string; password?: string }) => { ok: boolean; error?: string };
   deleteAdminUser: (id: string) => void;
   setAdminUserActive: (id: string, activo: boolean) => void;
-  requestCashReturn: (driverId: string, monto: number, obs?: string) => void;
-  requestCompanyRefund: (driverId: string, monto: number, obs?: string) => void;
-  requestDriverRefund: (driverId: string, monto: number, obs?: string) => void;
-  sendRefundReminder: (driverId: string, monto: number, obs?: string) => void;
+  requestCashReturn: (driverId: string, monto: number, obs?: string, periodId?: string) => void;
+  requestCompanyRefund: (driverId: string, monto: number, obs?: string, periodId?: string) => void;
+  requestDriverRefund: (driverId: string, monto: number, obs?: string, periodId?: string) => void;
+  sendRefundReminder: (driverId: string, monto: number, obs?: string, periodId?: string) => void;
   updateCashTransactionStatus: (id: string, estado: "pendiente" | "comprobante_enviado" | "en_revision" | "aprobado" | "confirmado" | "rechazado" | "no_encontrado") => void;
   changePassword: (current: string, next: string) => { ok: boolean; error?: string };
   setTheme: (t: ThemePref) => void;
@@ -320,10 +320,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           saveAdminUserToSupabase(updatedAdmin);
         }
       },
-      requestCashReturn: (driverId, monto, obs = "") => {
+      requestCashReturn: (driverId, monto, obs = "", periodId?: string) => {
         const tx: CashTransaction = {
           id: `tx-${uid()}`,
           driverId,
+          period_id: periodId,
           tipo: "devolucion_conductor",
           monto,
           estado: "comprobante_enviado",
@@ -341,10 +342,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           saveCashTransactionToSupabase(tx);
         }
       },
-      requestCompanyRefund: (driverId, monto, obs = "") => {
+      requestCompanyRefund: (driverId, monto, obs = "", periodId?: string) => {
         const tx: CashTransaction = {
           id: `tx-${uid()}`,
           driverId,
+          period_id: periodId,
           tipo: "reembolso_empresa",
           monto,
           estado: "pendiente",
@@ -362,10 +364,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           saveCashTransactionToSupabase(tx);
         }
       },
-      requestDriverRefund: (driverId, monto, obs = "") => {
+      requestDriverRefund: (driverId, monto, obs = "", periodId?: string) => {
         const tx: CashTransaction = {
           id: `tx-${uid()}`,
           driverId,
+          period_id: periodId,
           tipo: "solicitud_conductor",
           monto,
           estado: "pendiente",
@@ -383,10 +386,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           saveCashTransactionToSupabase(tx);
         }
       },
-      sendRefundReminder: (driverId, monto, obs = "") => {
+      sendRefundReminder: (driverId, monto, obs = "", periodId?: string) => {
         const tx: CashTransaction = {
           id: `tx-${uid()}`,
           driverId,
+          period_id: periodId,
           tipo: "recordatorio_empresa",
           monto,
           estado: "pendiente",

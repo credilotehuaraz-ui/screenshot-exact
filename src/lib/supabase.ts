@@ -130,6 +130,7 @@ export async function fetchCashTransactionsFromSupabase(): Promise<CashTransacti
   return data.map((t) => ({
     id: t.id,
     driverId: t.driver_id,
+    period_id: t.period_id ?? undefined,
     tipo: t.tipo,
     monto: t.monto,
     estado: t.estado,
@@ -205,6 +206,7 @@ export async function saveCashTransactionToSupabase(tx: CashTransaction): Promis
   const { error } = await supabase.from("cash_transactions").upsert({
     id: tx.id,
     driver_id: tx.driverId,
+    period_id: tx.period_id || null,
     tipo: tx.tipo,
     monto: tx.monto,
     estado: tx.estado,

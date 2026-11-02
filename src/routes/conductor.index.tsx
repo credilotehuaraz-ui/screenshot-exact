@@ -167,12 +167,12 @@ function DriverHome() {
         <StatCard icon={Undo2} label="Devolución pendiente" value={fmt(netPending.devolucionPendiente)} tone={netPending.devolucionPendiente > 0 ? "negative" : "default"} hint={netPending.devolucionPendiente > 0 ? "Saldo neto de la semana" : "Al día"} />
       </div>
 
-      {/* ACCIONES DINÁMICAS SEGÚN EL SIGNO DE CAJA CHICA DE LA SEMANA */}
+      {/* ACCIONES DINÁMICAS SEGÚN EL SALDO NETO PENDIENTE DE LA SEMANA */}
       <div className="px-4 pt-3">
-        {s.cajaFinal > 0 ? (
-          // CASO 1: POSITIVO -> CONDUCTOR DEBE A LA EMPRESA
+        {netPending.deudaConductorAEmpresa > 0 ? (
+          // CASO 1: POSITIVO NETO -> CONDUCTOR DEBE A LA EMPRESA
           <div className="rounded-2xl border border-negative/30 bg-negative-soft p-3.5 text-center space-y-2">
-            <p className="text-xs font-bold text-negative">Debes S/ {(s.cajaFinal / 100).toFixed(2)} a la Empresa (Semana {week})</p>
+            <p className="text-xs font-bold text-negative">Debes S/ {(netPending.deudaConductorAEmpresa / 100).toFixed(2)} a la Empresa (Semana {week})</p>
             <div className="grid grid-cols-2 gap-2">
               <Button size="sm" className="font-bold bg-negative text-negative-foreground hover:bg-negative/90" onClick={() => { setMontoTx((netPending.devolucionPendiente / 100).toFixed(2)); setDepositModal(true); }}>
                 <ArrowUpRight className="mr-1 size-3.5" /> Realizar depósito
@@ -182,18 +182,18 @@ function DriverHome() {
               </Button>
             </div>
           </div>
-        ) : s.cajaFinal < 0 ? (
-          // CASO 2: NEGATIVO -> LA EMPRESA DEBE AL CONDUCTOR
+        ) : netPending.deudaEmpresaAConductor > 0 ? (
+          // CASO 2: NEGATIVO NETO -> LA EMPRESA DEBE AL CONDUCTOR
           <div className="rounded-2xl border border-positive/30 bg-positive-soft p-3.5 text-center space-y-2">
-            <p className="text-xs font-bold text-positive">La Empresa te debe S/ {(Math.abs(s.cajaFinal) / 100).toFixed(2)} (Semana {week})</p>
+            <p className="text-xs font-bold text-positive">La Empresa te debe S/ {(netPending.deudaEmpresaAConductor / 100).toFixed(2)} (Semana {week})</p>
             <Button size="lg" className="w-full font-bold bg-positive text-positive-foreground hover:bg-positive/90" onClick={() => { setMontoTx((netPending.devolucionPendiente / 100).toFixed(2)); setRequestReturnModal(true); }}>
               <ArrowDownLeft className="mr-1 size-4" /> Solicitar devolución al Administrador
             </Button>
           </div>
         ) : (
-          // CASO 3: CERO -> CAJA CHICA AL DÍA
+          // CASO 3: CERO NETO -> CAJA CHICA AL DÍA / REEMBOLSADA
           <div className="rounded-2xl border border-border bg-card p-3 text-center">
-            <p className="text-xs font-extrabold text-positive">✓ Caja Chica al día: S/ 0.00 (Semana {week})</p>
+            <p className="text-xs font-extrabold text-positive">✓ Caja Chica al día / Reembolsada: S/ 0.00 (Semana {week})</p>
           </div>
         )}
       </div>

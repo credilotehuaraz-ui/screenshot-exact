@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Users, TrendingUp, Coins, Wallet, Undo2, AlertTriangle, LogOut, PlusCircle, CheckCircle, XCircle, ArrowDownLeft, BellRing, Trash2 } from "lucide-react";
+import { Users, TrendingUp, Coins, Wallet, Undo2, AlertTriangle, LogOut, PlusCircle, CheckCircle, XCircle, ArrowDownLeft, BellRing, Trash2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -216,23 +216,23 @@ function AdminDashboard() {
                   </div>
 
                   <div className="text-right">
-                    {s.cajaFinal > 0 ? (
+                    {netPending.deudaConductorAEmpresa > 0 ? (
                       <span className="inline-block text-xs font-bold text-negative bg-negative-soft px-2 py-0.5 rounded-full">
                         Debes a Empresa: {fmt(netPending.deudaConductorAEmpresa)}
                       </span>
-                    ) : s.cajaFinal < 0 ? (
+                    ) : netPending.deudaEmpresaAConductor > 0 ? (
                       <span className="inline-block text-xs font-bold text-positive bg-positive-soft px-2 py-0.5 rounded-full">
                         Empresa debe: {fmt(netPending.deudaEmpresaAConductor)}
                       </span>
                     ) : (
-                      <span className="inline-block text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                        Caja chica al día: S/ 0.00
+                      <span className="inline-block text-xs font-bold text-positive bg-positive-soft px-2 py-0.5 rounded-full">
+                        ✓ Al día / Reembolsado
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Acciones según el signo del saldo de caja chica */}
+                {/* Acciones basadas estrictamente en el saldo NETO PENDIENTE */}
                 <div className="mt-2.5 flex items-center justify-between gap-2">
                   <Button
                     size="sm"
@@ -246,7 +246,7 @@ function AdminDashboard() {
                     <Trash2 className="mr-1 size-3" /> Limpiar solicitudes
                   </Button>
 
-                  {s.cajaFinal > 0 ? (
+                  {netPending.deudaConductorAEmpresa > 0 ? (
                     <Button
                       size="sm"
                       variant="outline"
@@ -259,7 +259,7 @@ function AdminDashboard() {
                     >
                       <BellRing className="mr-1 size-3.5" /> Recordar reembolso
                     </Button>
-                  ) : s.cajaFinal < 0 ? (
+                  ) : netPending.deudaEmpresaAConductor > 0 ? (
                     <Button
                       size="sm"
                       variant="outline"
@@ -272,7 +272,11 @@ function AdminDashboard() {
                     >
                       <ArrowDownLeft className="mr-1 size-3.5" /> Registrar pago a Conductor
                     </Button>
-                  ) : null}
+                  ) : (
+                    <span className="text-xs font-extrabold text-positive flex items-center gap-1 py-1">
+                      <CheckCircle2 className="size-4" /> Pagado / Al día (S/ 0.00)
+                    </span>
+                  )}
                 </div>
               </li>
             ))}

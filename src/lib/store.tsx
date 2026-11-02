@@ -378,6 +378,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
             };
           }
 
+          // Resolver automáticamente cualquier solicitud de devolución enviada por el conductor para esta semana
+          const updatedTxs = s.cashTransactions.map((t) => {
+            if (t.driverId === driverId && t.period_id === periodId && t.tipo === "solicitud_conductor" && t.estado === "pendiente") {
+              const u = { ...t, estado: "aprobado" as const };
+              if (isSupabaseConfigured()) saveCashTransactionToSupabase(u);
+              return u;
+            }
+            return t;
+          });
+
           if (isSupabaseConfigured()) {
             saveCashTransactionToSupabase(tx);
           }
@@ -385,8 +395,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           return {
             ...s,
             cashTransactions: existing
-              ? s.cashTransactions.map((x) => (x.id === existing.id ? tx : x))
-              : [tx, ...s.cashTransactions],
+              ? updatedTxs.map((x) => (x.id === existing.id ? tx : x))
+              : [tx, ...updatedTxs],
           };
         });
       },

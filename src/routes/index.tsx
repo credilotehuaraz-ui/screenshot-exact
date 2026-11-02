@@ -31,8 +31,10 @@ function Login() {
   const [forgot, setForgot] = useState(false);
 
   useEffect(() => {
-    if (hydrated && session) navigate({ to: session.role === "admin" ? "/admin" : "/conductor" });
+    if (hydrated && session) navigate({ to: session.role === "conductor" ? "/conductor" : "/admin" });
   }, [hydrated, session, navigate]);
+
+  const whatsappUrl = "https://wa.me/51969841802?text=Hola,%20olvid%C3%A9%20mi%20contrase%C3%B1a%20en%20Control%20Cabify";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,34 +76,30 @@ function Login() {
           <Button type="submit" size="xl" className="w-full" disabled={loading}>
             {loading && <Loader2 className="animate-spin" />} Iniciar sesión
           </Button>
-          <button type="button" onClick={() => setForgot(true)} className="block w-full text-center text-sm font-medium text-primary">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full text-center text-sm font-medium text-primary hover:underline"
+          >
             Olvidé mi contraseña
-          </button>
+          </a>
         </form>
-
-        <div className="mt-10 rounded-xl border border-dashed p-4 text-xs text-muted-foreground">
-          <p className="mb-2 font-semibold text-foreground">Cuentas de demostración</p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              ["jperez", "1234", "Conductor: Juan"],
-              ["mrojas", "1234", "Conductora: María"],
-              ["admin", "admin123", "Administrador"],
-            ].map(([u, p, l]) => (
-              <Button key={u} type="button" variant="outline" size="sm" onClick={() => { setUsuario(u); setPassword(p); setError(""); }}>
-                {l}
-              </Button>
-            ))}
-          </div>
-          <p className="mt-2">El acceso es simulado en este prototipo; no hay autenticación real.</p>
-        </div>
       </div>
 
       <Dialog open={forgot} onOpenChange={setForgot}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Recuperar contraseña</DialogTitle>
-            <DialogDescription>Comunícate con el administrador de tu flota para restablecer tu contraseña. En la versión final recibirás un enlace por correo.</DialogDescription>
+            <DialogDescription>
+              Haz clic abajo para comunicarte directamente por WhatsApp (+51 969841802) para restablecer tu contraseña.
+            </DialogDescription>
           </DialogHeader>
+          <Button asChild size="lg" className="mt-2 w-full">
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+              Contactar por WhatsApp (+51 969841802)
+            </a>
+          </Button>
         </DialogContent>
       </Dialog>
     </MobileShell>

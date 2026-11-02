@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { Home, PlusCircle, CalendarDays, UserRound } from "lucide-react";
+import { Home, Coins, CalendarDays, UserRound } from "lucide-react";
 import { BottomNav, FullLoader, MobileShell } from "@/components/app/primitives";
 import { useApp } from "@/lib/store";
 
@@ -30,8 +30,8 @@ function ConductorLayout() {
         <BottomNav
           items={[
             { to: "/conductor", label: "Inicio", icon: Home, exact: true },
-            { to: "/conductor/registrar", label: "Registrar", icon: PlusCircle },
             { to: "/conductor/historial", label: "Historial", icon: CalendarDays },
+            { to: "/conductor/liquidacion", label: "Liquidación", icon: Coins },
             { to: "/conductor/cuenta", label: "Mi cuenta", icon: UserRound },
           ]}
         />

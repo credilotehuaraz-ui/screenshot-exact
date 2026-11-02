@@ -1,11 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/primitives";
-import { RecordForm } from "@/components/app/RecordForm";
-import { useCurrentDriver, useDriverRecords } from "@/lib/store";
-import { computeWeekCaja } from "@/lib/finance";
-import { fmt } from "@/lib/money";
-import { todayLima, weekStart } from "@/lib/dates";
+import { Button } from "@/components/ui/button";
+import { ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/conductor/registrar")({
   validateSearch: (s: Record<string, unknown>): { fecha?: string } => ({ fecha: typeof s.fecha === "string" ? s.fecha : undefined }),
@@ -13,29 +11,24 @@ export const Route = createFileRoute("/conductor/registrar")({
 });
 
 function Registrar() {
-  const { fecha } = Route.useSearch();
-  const driver = useCurrentDriver();
-  const recs = useDriverRecords(driver?.id);
   const navigate = useNavigate();
-  if (!driver) return null;
-  const initial = fecha ?? todayLima();
-  const exists = recs.some((r) => r.fecha === initial);
+
+  useEffect(() => {
+    toast.info("Acceso restringido", { description: "El registro diario es realizado únicamente por el administrador." });
+    navigate({ to: "/conductor" });
+  }, [navigate]);
 
   return (
     <div>
-      <PageHeader title={exists ? "Editar registro" : "Registrar mi día"} subtitle={`${driver.nombre} · ${driver.placa}`} back="/conductor" />
-      <RecordForm
-        driver={driver}
-        initialFecha={initial}
-        onCancel={() => navigate({ to: "/conductor" })}
-        onViewCuadre={(f) => navigate({ to: "/conductor/cuadre/$fecha", params: { fecha: f } })}
-        onSaved={(r) => {
-          const wk = [...recs.filter((x) => x.id !== r.id && x.fecha !== r.fecha), r].filter((x) => weekStart(x.fecha) === weekStart(r.fecha));
-          const c = computeWeekCaja(wk)[r.fecha];
-          toast.success("Registro guardado", { description: `Caja final: ${fmt(c.cajaFinal)}${c.devolucion ? ` · Devolución ${fmt(c.devolucion)}` : ""}` });
-          navigate({ to: "/conductor/cuadre/$fecha", params: { fecha: r.fecha } });
-        }}
-      />
+      <PageHeader title="Registro restringido" back="/conductor" />
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <ShieldAlert className="mb-3 size-12 text-warning" />
+        <h2 className="text-lg font-bold">Vista de solo lectura</h2>
+        <p className="mt-1 text-sm text-muted-foreground">El registro y modificación de producción diaria es gestionado únicamente por el administrador.</p>
+        <Button className="mt-6" onClick={() => navigate({ to: "/conductor" })}>
+          Volver al inicio
+        </Button>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, PlusCircle, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,19 +10,22 @@ import { DailyBreakdown } from "@/components/app/DailyBreakdown";
 import { useApp, useDriverRecords } from "@/lib/store";
 import { computeSettlement, computeWeekCaja } from "@/lib/finance";
 import { addDays, formatDateTime, formatShort, todayLima, weekStart } from "@/lib/dates";
-import { UserX } from "lucide-react";
 
 export const Route = createFileRoute("/admin/conductores/$id")({
+  validateSearch: (s: Record<string, unknown>): { week?: string } => ({
+    week: typeof s.week === "string" ? s.week : undefined,
+  }),
   component: DriverDetail,
 });
 
 function DriverDetail() {
   const { id } = Route.useParams();
+  const search = Route.useSearch();
   const { drivers, audit } = useApp();
   const driver = drivers.find((d) => d.id === id);
   const recs = useDriverRecords(id);
   const today = todayLima();
-  const [week, setWeek] = useState(addDays(weekStart(today), -7));
+  const [week, setWeek] = useState(() => search.week ?? weekStart(today));
   const [open, setOpen] = useState<string | null>(null);
   const s = useMemo(() => computeSettlement(week, recs, today), [week, recs, today]);
   const caja = useMemo(() => computeWeekCaja(s.dias.flatMap((d) => (d.record ? [d.record] : []))), [s]);
@@ -42,6 +45,13 @@ function DriverDetail() {
             <TabsTrigger value="cambios">Cambios</TabsTrigger>
           </TabsList>
           <TabsContent value="registros" className="space-y-2">
+            <div className="py-1">
+              <Button asChild size="sm" className="w-full">
+                <Link to="/admin/registro" search={{ driverId: id, fecha: today }}>
+                  <PlusCircle /> Registrar producción para hoy
+                </Link>
+              </Button>
+            </div>
             {s.dias.map((d) => {
               const c = caja[d.fecha];
               return (

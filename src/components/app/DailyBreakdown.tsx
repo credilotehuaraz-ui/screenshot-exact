@@ -1,4 +1,4 @@
-import type { CajaDay, DailyRecord } from "@/lib/finance";
+import { expenseCategoryMeta, getRecordExpenses, type CajaDay, type DailyRecord } from "@/lib/finance";
 import { fmt } from "@/lib/money";
 import { formatLong } from "@/lib/dates";
 import { OpLine, Section, StatusBadge, cashTone } from "./primitives";
@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 /** Vertical petty-cash breakdown for one day. Production is kept separate from the cash box. */
 export function DailyBreakdown({ record, caja }: { record: DailyRecord; caja: CajaDay }) {
-  const fuel = record.gasolina;
+  const expenses = getRecordExpenses(record);
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
@@ -19,13 +19,20 @@ export function DailyBreakdown({ record, caja }: { record: DailyRecord; caja: Ca
         <p className="mt-1 text-xs text-muted-foreground">No se mezcla con la caja chica.</p>
       </Section>
 
-      <Section title="Gasolina">
-        {fuel.length === 0 ? (
-          <OpLine label="Sin gastos" value={fmt(0)} />
+      <Section title="Gastos Operativos">
+        {expenses.length === 0 ? (
+          <OpLine label="Sin gastos operativos" value={fmt(0)} />
         ) : (
-          fuel.map((g, i) => <OpLine key={g.id} op={i === 0 ? "" : "+"} label={g.desc || `Gasto ${i + 1}`} value={fmt(g.monto)} />)
+          expenses.map((g, i) => (
+            <OpLine
+              key={g.id}
+              op={i === 0 ? "" : "+"}
+              label={`${expenseCategoryMeta[g.categoria]?.icon || "📝"} ${g.desc || expenseCategoryMeta[g.categoria]?.label || "Gasto"}`}
+              value={fmt(g.monto)}
+            />
+          ))
         )}
-        <OpLine op="=" label="Total gasolina" value={fmt(caja.gasolina)} total />
+        <OpLine op="=" label="Total gastos operativos" value={fmt(caja.gasolina)} total />
       </Section>
 
       <Section title="Caja chica">
@@ -33,7 +40,7 @@ export function DailyBreakdown({ record, caja }: { record: DailyRecord; caja: Ca
         <OpLine op="+" label="A bordo" value={fmt(caja.abordo)} />
         <OpLine op="+" label="Dinero recibido" value={fmt(caja.recibido)} />
         <OpLine op="=" label="Subtotal" value={fmt(caja.subtotal)} total />
-        <OpLine op="−" label="Gasolina" value={fmt(caja.gasolina)} />
+        <OpLine op="−" label="Gastos Operativos" value={fmt(caja.gasolina)} />
         <OpLine op="−" label="Peajes" value={fmt(caja.peajes)} />
         <OpLine op="=" label="Caja final" value={fmt(caja.cajaFinal)} tone={cashTone(caja.cajaFinal)} total big />
       </Section>
@@ -57,13 +64,14 @@ export function DailyBreakdown({ record, caja }: { record: DailyRecord; caja: Ca
 }
 
 export function cuadreText(record: DailyRecord, caja: CajaDay, nombre: string, placa: string) {
+  const expenses = getRecordExpenses(record);
   return [
     `Control Cabify — ${nombre} (${placa})`,
     formatLong(record.fecha),
     `Producción: ${fmt(record.produccion)}`,
-    `Gasolina: ${record.gasolina.map((g) => fmt(g.monto)).join(" + ") || fmt(0)} = ${fmt(caja.gasolina)}`,
+    `Gastos Operativos: ${expenses.map((g) => `${expenseCategoryMeta[g.categoria]?.label}: ${fmt(g.monto)}`).join(", ") || fmt(0)} = ${fmt(caja.gasolina)}`,
     `Caja anterior ${fmt(caja.cajaAnterior)} + A bordo ${fmt(caja.abordo)} + Recibido ${fmt(caja.recibido)} = ${fmt(caja.subtotal)}`,
-    `− Gasolina ${fmt(caja.gasolina)} − Peajes ${fmt(caja.peajes)} = Caja final ${fmt(caja.cajaFinal)}`,
+    `− Gastos ${fmt(caja.gasolina)} − Peajes ${fmt(caja.peajes)} = Caja final ${fmt(caja.cajaFinal)}`,
     caja.devolucion > 0 ? `Devolución pendiente: ${fmt(caja.devolucion)}` : "",
   ]
     .filter(Boolean)

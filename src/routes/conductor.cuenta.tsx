@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { PageHeader, Section } from "@/components/app/primitives";
+import { PageHeader, Section, SyncIndicator } from "@/components/app/primitives";
 import { useApp, useCurrentDriver, type ThemePref } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -78,9 +78,10 @@ function Cuenta() {
           <ThemePicker />
         </Section>
         <Section title="Sincronización">
-          <p className="flex items-center gap-2 text-sm">
-            <CloudOff className="size-4 text-muted-foreground" /> Sin sincronización: este prototipo guarda los datos solo en este dispositivo.
-          </p>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Estado de la cuenta</span>
+            <SyncIndicator />
+          </div>
         </Section>
         <Button variant="outline" size="xl" className="w-full" onClick={() => setOpen(true)}>
           <KeyRound /> Cambiar contraseña

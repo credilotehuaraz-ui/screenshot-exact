@@ -1,6 +1,7 @@
 import { Link, type LinkProps } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, CloudOff, Loader2, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Cloud, CloudOff, Loader2, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { isSupabaseConfigured } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/money";
 import { formatWeekRange, addDays, weekStart, todayLima } from "@/lib/dates";
@@ -156,16 +157,25 @@ export function WeekSelector({ value, onChange }: { value: string; onChange: (v:
 }
 
 export function SyncIndicator({ compact }: { compact?: boolean }) {
+  const online = isSupabaseConfigured();
+  if (online) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-positive-soft px-2 py-1 text-[11px] font-medium text-positive" title="Conectado a la base de datos de Supabase en vivo">
+        <Cloud className="size-3" />
+        {!compact && "Supabase Activo"}
+      </span>
+    );
+  }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground" title="Prototipo: los datos se guardan solo en este dispositivo">
+    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground" title="Almacenamiento local activo. Configura las variables VITE_SUPABASE_URL para conectar a la nube.">
       <CloudOff className="size-3" />
-      {!compact && "Solo local · demo"}
+      {!compact && "Almacenamiento Local"}
     </span>
   );
 }
 
 export function DemoBanner() {
-  return <div className="bg-primary-soft px-4 py-1.5 text-center text-[11px] font-medium text-accent-foreground">Prototipo · datos de demostración guardados en este dispositivo</div>;
+  return null;
 }
 
 export function FullLoader() {

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Pencil, Share2, FileQuestion } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share2, FileQuestion } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState, PageHeader } from "@/components/app/primitives";
@@ -54,14 +54,9 @@ function Cuadre() {
         {record && caja ? (
           <>
             <DailyBreakdown record={record} caja={caja} />
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Button asChild variant="outline" size="xl">
-                <Link to="/conductor/registrar" search={{ fecha }}>
-                  <Pencil /> Editar registro
-                </Link>
-              </Button>
-              <Button size="xl" onClick={() => shareText(cuadreText(record, caja, driver.nombre, driver.placa))}>
-                <Share2 /> Compartir
+            <div className="mt-4">
+              <Button size="xl" className="w-full" onClick={() => shareText(cuadreText(record, caja, driver.nombre, driver.placa))}>
+                <Share2 /> Compartir informe
               </Button>
             </div>
           </>
@@ -69,14 +64,7 @@ function Cuadre() {
           <EmptyState
             icon={FileQuestion}
             title="Sin datos para esta fecha"
-            text={`No hay registro del ${formatLong(fecha)}. No se asume que fue un día libre.`}
-            action={
-              <Button asChild>
-                <Link to="/conductor/registrar" search={{ fecha }}>
-                  Registrar este día
-                </Link>
-              </Button>
-            }
+            text={`No hay registro ingresado para el ${formatLong(fecha)}. Si requieres cargar datos, contacta al administrador.`}
           />
         )}
       </div>

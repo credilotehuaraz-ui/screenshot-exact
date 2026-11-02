@@ -69,11 +69,10 @@ function Historial() {
             return (
               <li key={d.fecha}>
                 <Link
-                  to={d.record ? "/conductor/cuadre/$fecha" : "/conductor/registrar"}
-                  params={{ fecha: d.fecha } as never}
-                  search={(d.record ? undefined : { fecha: d.fecha }) as never}
-                  disabled={d.estado === "futuro"}
-                  className={cn("flex items-center gap-3 rounded-xl border p-3", d.record ? "bg-card shadow-card" : "border-dashed", d.estado === "futuro" && "opacity-50")}
+                  to="/conductor/cuadre/$fecha"
+                  params={{ fecha: d.fecha }}
+                  disabled={!d.record || d.estado === "futuro"}
+                  className={cn("flex items-center gap-3 rounded-xl border p-3", d.record ? "bg-card shadow-card" : "border-dashed", (!d.record || d.estado === "futuro") && "opacity-60")}
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
@@ -87,7 +86,7 @@ function Historial() {
                         <span>Peaj. {fmt(d.record.peajes)}</span>
                       </div>
                     ) : (
-                      <p className="mt-1 text-[11px] text-muted-foreground">{d.estado === "futuro" ? "Aún no transcurre" : "Toca para registrar"}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">{d.estado === "futuro" ? "Aún no transcurre" : "Sin registro ingresado"}</p>
                     )}
                   </div>
                   {c && (
@@ -96,7 +95,7 @@ function Historial() {
                       <div className={cn("num text-sm font-semibold", toneText[cashTone(c.cajaFinal)])}>{fmt(c.cajaFinal)}</div>
                     </div>
                   )}
-                  <ChevronRight className="size-4 text-muted-foreground" />
+                  {d.record && <ChevronRight className="size-4 text-muted-foreground" />}
                 </Link>
               </li>
             );

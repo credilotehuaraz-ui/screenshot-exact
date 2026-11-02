@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Users, TrendingUp, Coins, Wallet, Undo2, AlertTriangle, LogOut, PlusCircle, CheckCircle, XCircle, ArrowDownLeft, BellRing } from "lucide-react";
+import { Users, TrendingUp, Coins, Wallet, Undo2, AlertTriangle, LogOut, PlusCircle, CheckCircle, XCircle, ArrowDownLeft, BellRing, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function AdminDashboard() {
-  const { drivers, records, audit, cashTransactions, updateCashTransactionStatus, requestCompanyRefund, sendRefundReminder, logout } = useApp();
+  const { drivers, records, audit, cashTransactions, updateCashTransactionStatus, requestCompanyRefund, sendRefundReminder, clearDriverTransactions, logout } = useApp();
   const navigate = useNavigate();
   const today = todayLima();
   const [week, setWeek] = useState(weekStart(today));
@@ -44,11 +44,15 @@ function AdminDashboard() {
   const sum = (f: (r: (typeof rows)[number]) => number) => rows.reduce((a, r) => a + f(r), 0);
   const incompletos = rows.flatMap(({ d, s }) => s.dias.filter((x) => x.estado === "pendiente" || x.estado === "sin_datos").map((x) => ({ d, x })));
 
-  // Transacciones enviadas por conductores pendientes de verificación por el admin
-  const pendingComprobantes = cashTransactions.filter((t) => t.tipo === "devolucion_conductor" && t.estado === "comprobante_enviado");
+  // Transacciones enviadas por conductores pendientes de verificación por el admin para la semana actual o sin semana
+  const pendingComprobantes = cashTransactions.filter(
+    (t) => t.tipo === "devolucion_conductor" && t.estado === "comprobante_enviado" && (!t.period_id || t.period_id === week)
+  );
 
   // Transacciones de solicitud enviadas por conductores (cuando caja es negativa)
-  const pendingRequests = cashTransactions.filter((t) => t.tipo === "solicitud_conductor" && t.estado === "pendiente");
+  const pendingRequests = cashTransactions.filter(
+    (t) => t.tipo === "solicitud_conductor" && t.estado === "pendiente" && (!t.period_id || t.period_id === week)
+  );
 
   const handleSendReminderToDriver = () => {
     const cents = parseMoney(montoTx);
@@ -59,7 +63,7 @@ function AdminDashboard() {
     sendRefundReminder(selectedDriverId, cents, obsTx, week);
 
     const montoFormatted = (cents / 100).toFixed(2);
-    const waMsg = encodeURIComponent(`Hola ${d?.nombre}, la Empresa te recuerda efectuar el reembolso de S/ ${montoFormatted} a favor de la Empresa por la liquidación de la semana del ${week}. Por favor realiza el depósito y envía el comprobante.`);
+    const waMsg = encodeURIComponent(`Hola ${d?.nombre}, la Empresa te recuerda efectuar el reembolso de S/ ${montoFormatted} a favor de la Empresa para la semana del ${week}. Por favor realiza el depósito y envía el comprobante.`);
     window.open(`https://wa.me/51969841802?text=${waMsg}`, "_blank");
 
     toast.success("Recordatorio enviado al conductor", { description: `Se notificó a ${d?.nombre}` });
@@ -77,7 +81,7 @@ function AdminDashboard() {
     requestCompanyRefund(selectedDriverId, cents, obsTx, week);
 
     const montoFormatted = (cents / 100).toFixed(2);
-    const waMsg = encodeURIComponent(`Hola ${d?.nombre}, la Empresa ha registrado un depósito a tu favor por S/ ${montoFormatted} por la semana del ${week}. Por favor ingresa a tu aplicación para confirmarlo.`);
+    const waMsg = encodeURIComponent(`Hola ${d?.nombre}, la Empresa ha registrado un depósito a tu favor por S/ ${montoFormatted} para la semana del ${week}. Por favor ingresa a tu aplicación para confirmarlo.`);
     window.open(`https://wa.me/51969841802?text=${waMsg}`, "_blank");
 
     toast.success("Depósito registrado", { description: `Notificado a ${d?.nombre} para su confirmación.` });
@@ -127,7 +131,7 @@ function AdminDashboard() {
       <div className="space-y-3 p-4">
         {/* Sección de Alertas: Comprobantes y Solicitudes de Devoluciones de Caja */}
         {(pendingComprobantes.length > 0 || pendingRequests.length > 0) && (
-          <Section title={`Verificación de Caja Chica (${pendingComprobantes.length + pendingRequests.length} pendientes)`}>
+          <Section title={`Verificación de Caja Chica (${pendingComprobantes.length + pendingRequests.length} pendientes para la semana ${week})`}>
             <div className="space-y-3">
               {/* Comprobantes enviados por conductores (Caja Positiva) */}
               {pendingComprobantes.map((t) => {
@@ -135,7 +139,7 @@ function AdminDashboard() {
                 return (
                   <div key={t.id} className="rounded-xl border border-warning/40 bg-warning-soft p-3.5 space-y-2">
                     <p className="text-xs text-foreground leading-relaxed">
-                      Conductor <span className="font-extrabold">{d?.nombre ?? "Desconocido"}</span> de la unidad <span className="font-bold border rounded bg-background px-1.5 py-0.5">{d?.placa ?? "S/P"}</span> ha enviado un comprobante de pago por <span className="font-extrabold text-positive">S/ {(t.monto / 100).toFixed(2)}</span>. Verifica el pago.
+                      Conductor <span className="font-extrabold">{d?.nombre ?? "Desconocido"}</span> de la unidad <span className="font-bold border rounded bg-background px-1.5 py-0.5">{d?.placa ?? "S/P"}</span> ha enviado un comprobante de pago por <span className="font-extrabold text-positive">S/ {(t.monto / 100).toFixed(2)}</span> para la semana del {t.period_id || week}.
                     </p>
                     {t.obs && <p className="text-[11px] text-muted-foreground italic">Nota: &quot;{t.obs}&quot;</p>}
 
@@ -172,7 +176,7 @@ function AdminDashboard() {
                 return (
                   <div key={t.id} className="rounded-xl border border-primary/40 bg-primary-soft p-3.5 space-y-2">
                     <p className="text-xs text-foreground leading-relaxed">
-                      Conductor <span className="font-extrabold">{d?.nombre ?? "Desconocido"}</span> de la unidad <span className="font-bold border rounded bg-background px-1.5 py-0.5">{d?.placa ?? "S/P"}</span> tiene una devolución pendiente de <span className="font-extrabold text-negative">S/ {(t.monto / 100).toFixed(2)}</span> y solicita el depósito correspondiente.
+                      Conductor <span className="font-extrabold">{d?.nombre ?? "Desconocido"}</span> de la unidad <span className="font-bold border rounded bg-background px-1.5 py-0.5">{d?.placa ?? "S/P"}</span> tiene una devolución pendiente de <span className="font-extrabold text-negative">S/ {(t.monto / 100).toFixed(2)}</span> para la semana del {t.period_id || week} y solicita el depósito correspondiente.
                     </p>
                     {t.obs && <p className="text-[11px] text-muted-foreground italic">Nota: &quot;{t.obs}&quot;</p>}
 
@@ -229,7 +233,19 @@ function AdminDashboard() {
                 </div>
 
                 {/* Acciones según el signo del saldo de caja chica */}
-                <div className="mt-2.5 flex items-center justify-end gap-2">
+                <div className="mt-2.5 flex items-center justify-between gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-[11px] text-muted-foreground hover:text-negative"
+                    onClick={() => {
+                      clearDriverTransactions(d.id);
+                      toast.success(`Solicitudes limpiadas para ${d.nombre}`);
+                    }}
+                  >
+                    <Trash2 className="mr-1 size-3" /> Limpiar solicitudes
+                  </Button>
+
                   {s.cajaFinal > 0 ? (
                     <Button
                       size="sm"
@@ -241,7 +257,7 @@ function AdminDashboard() {
                         setReminderModal(true);
                       }}
                     >
-                      <BellRing className="mr-1 size-3.5" /> Recordar / Solicitar reembolso a la Empresa
+                      <BellRing className="mr-1 size-3.5" /> Recordar reembolso
                     </Button>
                   ) : s.cajaFinal < 0 ? (
                     <Button
@@ -309,6 +325,10 @@ function AdminDashboard() {
           </DialogHeader>
 
           <div className="space-y-3 pt-1">
+            <div className="rounded-xl border bg-primary-soft p-2.5 text-xs font-semibold text-primary">
+              📌 Semana correspondiente: <span className="font-extrabold text-foreground">{week}</span>
+            </div>
+
             <div className="space-y-1.5">
               <Label>Conductor</Label>
               <select
@@ -360,6 +380,10 @@ function AdminDashboard() {
           </DialogHeader>
 
           <div className="space-y-3 pt-1">
+            <div className="rounded-xl border bg-primary-soft p-2.5 text-xs font-semibold text-primary">
+              📌 Semana correspondiente: <span className="font-extrabold text-foreground">{week}</span>
+            </div>
+
             <div className="space-y-1.5">
               <Label>Conductor destinatario</Label>
               <select

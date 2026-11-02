@@ -44,9 +44,9 @@ function DriverHome() {
 
   if (!driver) return null;
 
-  // Alertas activas
-  const adminReminder = driverTxs.find((t) => t.tipo === "recordatorio_empresa" && t.estado === "pendiente" && (!t.period_id || t.period_id === week));
-  const adminRefundToConfirm = driverTxs.find((t) => t.tipo === "reembolso_empresa" && t.estado === "pendiente" && (!t.period_id || t.period_id === week));
+  // Alertas activas para la semana seleccionada
+  const adminReminder = driverTxs.find((t) => t.tipo === "recordatorio_empresa" && t.estado === "pendiente" && t.period_id === week);
+  const adminRefundToConfirm = driverTxs.find((t) => t.tipo === "reembolso_empresa" && t.estado === "pendiente" && t.period_id === week);
 
   const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Lima", hour: "numeric", hour12: false }).format(new Date()));
   const greet = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
@@ -213,6 +213,10 @@ function DriverHome() {
           </DialogHeader>
 
           <div className="space-y-3 pt-1">
+            <div className="rounded-xl border bg-primary-soft p-2.5 text-xs font-semibold text-primary">
+              📌 Semana correspondiente: <span className="font-extrabold text-foreground">{week}</span>
+            </div>
+
             <div className="rounded-xl border bg-muted/60 p-3 text-xs text-muted-foreground leading-relaxed">
               <p className="flex items-center gap-1.5 font-bold text-foreground mb-1">
                 <AlertCircle className="size-4 text-primary shrink-0" /> Instrucciones de pago
@@ -256,6 +260,10 @@ function DriverHome() {
           </DialogHeader>
 
           <div className="space-y-3 pt-1">
+            <div className="rounded-xl border bg-primary-soft p-2.5 text-xs font-semibold text-primary">
+              📌 Semana correspondiente: <span className="font-extrabold text-foreground">{week}</span>
+            </div>
+
             <div className="space-y-1.5">
               <Label>Monto de devolución solicitado (S/)</Label>
               <div className="relative">

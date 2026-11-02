@@ -114,12 +114,13 @@ export function cajaAnteriorFor(weekRecords: DailyRecord[], fecha: ISODate): Cen
 }
 
 /**
- * REGLA PRINCIPAL DE SIGNOS EN CAJA CHICA Y VINCULACIÓN POR PERIODO:
+ * REGLA PRINCIPAL DE SIGNOS EN CAJA CHICA Y VINCULACIÓN ESTRICTA POR PERIODO:
  * - POSITIVO (cajaFinal > 0): CONDUCTOR DEBE A LA EMPRESA
  * - NEGATIVO (cajaFinal < 0): LA EMPRESA DEBE AL CONDUCTOR
  * - CERO (cajaFinal = 0): CAJA CHICA AL DÍA (SIN DEUDA)
  *
- * Devuelve el saldo neto acumulado restando únicamente las transacciones que han sido APROBADAS o CONFIRMADAS.
+ * Devuelve el saldo neto acumulado restando únicamente las transacciones que corresponden
+ * estrictamente a la semana seleccionada (periodId) y que han sido APROBADAS o CONFIRMADAS.
  */
 export function computeNetPendingBalance(
   cajaFinal: Cents,
@@ -132,8 +133,9 @@ export function computeNetPendingBalance(
   deudaConductorAEmpresa: Cents;
   aprobadoTotal: Cents;
 } {
+  // Aislamiento estricto de periodo por semana (sin cruce de semanas)
   const periodTxs = periodId
-    ? transactions.filter((t) => !t.period_id || t.period_id === periodId)
+    ? transactions.filter((t) => t.period_id === periodId)
     : transactions;
 
   const approvedDevoluciones = periodTxs

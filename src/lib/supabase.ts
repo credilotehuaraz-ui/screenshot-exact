@@ -221,6 +221,16 @@ export async function saveCashTransactionToSupabase(tx: CashTransaction): Promis
   return true;
 }
 
+export async function deleteTransactionsForDriverFromSupabase(driverId: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from("cash_transactions").delete().eq("driver_id", driverId);
+  if (error) {
+    console.error("Error limpiando transacciones del conductor:", error);
+    return false;
+  }
+  return true;
+}
+
 export async function deleteDriverFromSupabase(id: string): Promise<boolean> {
   if (!supabase) return false;
   const { error } = await supabase.from("drivers").delete().eq("id", id);

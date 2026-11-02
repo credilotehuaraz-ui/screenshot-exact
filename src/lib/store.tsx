@@ -15,6 +15,7 @@ import {
   saveCashTransactionToSupabase,
   deleteDriverFromSupabase,
   deleteAdminUserFromSupabase,
+  deleteTransactionsForDriverFromSupabase,
   signInWithSupabaseAuth,
   signOutFromSupabaseAuth,
   updateSupabasePassword,
@@ -41,7 +42,7 @@ interface PersistedState {
   lastSaved: string | null;
 }
 
-const KEY = "control-cabify-store-v7";
+const KEY = "control-cabify-store-v8";
 const SUPERADMIN = { usuario: "superadmin", password: "superadmin123" };
 const DEFAULT_ADMIN = { usuario: "admin", password: "admin123" };
 
@@ -74,6 +75,7 @@ interface AppCtx extends PersistedState {
   requestDriverRefund: (driverId: string, monto: number, obs?: string, periodId?: string) => void;
   sendRefundReminder: (driverId: string, monto: number, obs?: string, periodId?: string) => void;
   updateCashTransactionStatus: (id: string, estado: "pendiente" | "comprobante_enviado" | "en_revision" | "aprobado" | "confirmado" | "rechazado" | "no_encontrado") => void;
+  clearDriverTransactions: (driverId: string) => void;
   changePassword: (current: string, next: string) => { ok: boolean; error?: string };
   setTheme: (t: ThemePref) => void;
   resetDemo: () => void;
@@ -321,92 +323,140 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       },
       requestCashReturn: (driverId, monto, obs = "", periodId?: string) => {
-        const tx: CashTransaction = {
-          id: `tx-${uid()}`,
-          driverId,
-          period_id: periodId,
-          tipo: "devolucion_conductor",
-          monto,
-          estado: "comprobante_enviado",
-          fecha: new Date().toISOString().slice(0, 10),
-          obs,
-          createdAt: new Date().toISOString(),
-        };
+        setState((s) => {
+          const existing = s.cashTransactions.find(
+            (t) => t.driverId === driverId && t.period_id === periodId && t.tipo === "devolucion_conductor" && (t.estado === "pendiente" || t.estado === "comprobante_enviado")
+          );
+          let tx: CashTransaction;
+          if (existing) {
+            tx = { ...existing, monto, obs, estado: "comprobante_enviado", fecha: new Date().toISOString().slice(0, 10) };
+          } else {
+            tx = {
+              id: `tx-${uid()}`,
+              driverId,
+              period_id: periodId,
+              tipo: "devolucion_conductor",
+              monto,
+              estado: "comprobante_enviado",
+              fecha: new Date().toISOString().slice(0, 10),
+              obs,
+              createdAt: new Date().toISOString(),
+            };
+          }
 
-        setState((s) => ({
-          ...s,
-          cashTransactions: [tx, ...s.cashTransactions],
-        }));
+          if (isSupabaseConfigured()) {
+            saveCashTransactionToSupabase(tx);
+          }
 
-        if (isSupabaseConfigured()) {
-          saveCashTransactionToSupabase(tx);
-        }
+          return {
+            ...s,
+            cashTransactions: existing
+              ? s.cashTransactions.map((x) => (x.id === existing.id ? tx : x))
+              : [tx, ...s.cashTransactions],
+          };
+        });
       },
       requestCompanyRefund: (driverId, monto, obs = "", periodId?: string) => {
-        const tx: CashTransaction = {
-          id: `tx-${uid()}`,
-          driverId,
-          period_id: periodId,
-          tipo: "reembolso_empresa",
-          monto,
-          estado: "pendiente",
-          fecha: new Date().toISOString().slice(0, 10),
-          obs,
-          createdAt: new Date().toISOString(),
-        };
+        setState((s) => {
+          const existing = s.cashTransactions.find(
+            (t) => t.driverId === driverId && t.period_id === periodId && t.tipo === "reembolso_empresa" && t.estado === "pendiente"
+          );
+          let tx: CashTransaction;
+          if (existing) {
+            tx = { ...existing, monto, obs, fecha: new Date().toISOString().slice(0, 10) };
+          } else {
+            tx = {
+              id: `tx-${uid()}`,
+              driverId,
+              period_id: periodId,
+              tipo: "reembolso_empresa",
+              monto,
+              estado: "pendiente",
+              fecha: new Date().toISOString().slice(0, 10),
+              obs,
+              createdAt: new Date().toISOString(),
+            };
+          }
 
-        setState((s) => ({
-          ...s,
-          cashTransactions: [tx, ...s.cashTransactions],
-        }));
+          if (isSupabaseConfigured()) {
+            saveCashTransactionToSupabase(tx);
+          }
 
-        if (isSupabaseConfigured()) {
-          saveCashTransactionToSupabase(tx);
-        }
+          return {
+            ...s,
+            cashTransactions: existing
+              ? s.cashTransactions.map((x) => (x.id === existing.id ? tx : x))
+              : [tx, ...s.cashTransactions],
+          };
+        });
       },
       requestDriverRefund: (driverId, monto, obs = "", periodId?: string) => {
-        const tx: CashTransaction = {
-          id: `tx-${uid()}`,
-          driverId,
-          period_id: periodId,
-          tipo: "solicitud_conductor",
-          monto,
-          estado: "pendiente",
-          fecha: new Date().toISOString().slice(0, 10),
-          obs,
-          createdAt: new Date().toISOString(),
-        };
+        setState((s) => {
+          const existing = s.cashTransactions.find(
+            (t) => t.driverId === driverId && t.period_id === periodId && t.tipo === "solicitud_conductor" && t.estado === "pendiente"
+          );
+          let tx: CashTransaction;
+          if (existing) {
+            tx = { ...existing, monto, obs, fecha: new Date().toISOString().slice(0, 10) };
+          } else {
+            tx = {
+              id: `tx-${uid()}`,
+              driverId,
+              period_id: periodId,
+              tipo: "solicitud_conductor",
+              monto,
+              estado: "pendiente",
+              fecha: new Date().toISOString().slice(0, 10),
+              obs,
+              createdAt: new Date().toISOString(),
+            };
+          }
 
-        setState((s) => ({
-          ...s,
-          cashTransactions: [tx, ...s.cashTransactions],
-        }));
+          if (isSupabaseConfigured()) {
+            saveCashTransactionToSupabase(tx);
+          }
 
-        if (isSupabaseConfigured()) {
-          saveCashTransactionToSupabase(tx);
-        }
+          return {
+            ...s,
+            cashTransactions: existing
+              ? s.cashTransactions.map((x) => (x.id === existing.id ? tx : x))
+              : [tx, ...s.cashTransactions],
+          };
+        });
       },
       sendRefundReminder: (driverId, monto, obs = "", periodId?: string) => {
-        const tx: CashTransaction = {
-          id: `tx-${uid()}`,
-          driverId,
-          period_id: periodId,
-          tipo: "recordatorio_empresa",
-          monto,
-          estado: "pendiente",
-          fecha: new Date().toISOString().slice(0, 10),
-          obs,
-          createdAt: new Date().toISOString(),
-        };
+        setState((s) => {
+          const existing = s.cashTransactions.find(
+            (t) => t.driverId === driverId && t.period_id === periodId && t.tipo === "recordatorio_empresa" && t.estado === "pendiente"
+          );
+          let tx: CashTransaction;
+          if (existing) {
+            tx = { ...existing, monto, obs, fecha: new Date().toISOString().slice(0, 10) };
+          } else {
+            tx = {
+              id: `tx-${uid()}`,
+              driverId,
+              period_id: periodId,
+              tipo: "recordatorio_empresa",
+              monto,
+              estado: "pendiente",
+              fecha: new Date().toISOString().slice(0, 10),
+              obs,
+              createdAt: new Date().toISOString(),
+            };
+          }
 
-        setState((s) => ({
-          ...s,
-          cashTransactions: [tx, ...s.cashTransactions],
-        }));
+          if (isSupabaseConfigured()) {
+            saveCashTransactionToSupabase(tx);
+          }
 
-        if (isSupabaseConfigured()) {
-          saveCashTransactionToSupabase(tx);
-        }
+          return {
+            ...s,
+            cashTransactions: existing
+              ? s.cashTransactions.map((x) => (x.id === existing.id ? tx : x))
+              : [tx, ...s.cashTransactions],
+          };
+        });
       },
       updateCashTransactionStatus: (id, estado) => {
         let updatedTx: CashTransaction | null = null;
@@ -423,6 +473,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         if (updatedTx && isSupabaseConfigured()) {
           saveCashTransactionToSupabase(updatedTx);
+        }
+      },
+      clearDriverTransactions: (driverId) => {
+        setState((s) => ({
+          ...s,
+          cashTransactions: s.cashTransactions.filter((t) => t.driverId !== driverId),
+        }));
+
+        if (isSupabaseConfigured()) {
+          deleteTransactionsForDriverFromSupabase(driverId);
         }
       },
       changePassword: (current, next) => {

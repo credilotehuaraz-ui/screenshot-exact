@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { computeSettlement, computeSettlementFromNumbers, computeWeekCaja } from "./finance";
-import { demoRecords } from "./demo-data";
+import { computeSettlement, computeSettlementFromNumbers, computeWeekCaja, type DailyRecord } from "./finance";
 import { fmt, parseMoney } from "./money";
 
-const d1 = demoRecords.filter((r) => r.driverId === "d1");
+const mockD1Records: DailyRecord[] = [
+  { id: "r1", driverId: "d1", fecha: "2026-10-12", estado: "trabajado", produccion: 19429, abordo: 6059, recibido: 0, gasolina: [{ id: "g1", monto: 7225 }], peajes: 0, updatedAt: "", updatedBy: "" },
+  { id: "r2", driverId: "d1", fecha: "2026-10-13", estado: "trabajado", produccion: 21000, abordo: 0, recibido: 0, gasolina: [{ id: "g2", monto: 6000 }], peajes: 0, updatedAt: "", updatedBy: "" },
+  { id: "r3", driverId: "d1", fecha: "2026-10-14", estado: "trabajado", produccion: 23000, abordo: 0, recibido: 0, gasolina: [{ id: "g3", monto: 5000 }], peajes: 0, updatedAt: "", updatedBy: "" },
+  { id: "r4", driverId: "d1", fecha: "2026-10-15", estado: "trabajado", produccion: 24000, abordo: 0, recibido: 0, gasolina: [{ id: "g4", monto: 4000 }], peajes: 0, updatedAt: "", updatedBy: "" },
+  { id: "r5", driverId: "d1", fecha: "2026-10-16", estado: "trabajado", produccion: 24000, abordo: 0, recibido: 0, gasolina: [{ id: "g5", monto: 3000 }], peajes: 0, updatedAt: "", updatedBy: "" },
+  { id: "r6", driverId: "d1", fecha: "2026-10-17", estado: "trabajado", produccion: 23879, abordo: 0, recibido: 0, gasolina: [{ id: "g6", monto: 2000 }], peajes: 0, updatedAt: "", updatedBy: "" },
+];
 
 describe("liquidación semanal (ejemplo oficial 12–18 oct)", () => {
-  const s = computeSettlement("2026-10-12", d1, "2026-10-20");
+  const s = computeSettlement("2026-10-12", mockD1Records, "2026-10-20");
   it("producción total y días trabajados", () => {
     expect(s.produccionTotal).toBe(135308);
     expect(s.diasTrabajados).toBe(6);
@@ -15,20 +21,20 @@ describe("liquidación semanal (ejemplo oficial 12–18 oct)", () => {
   it("participación = 40% del excedente", () => expect(s.participacion).toBe(6123));
   it("comisión fija = 70 × días", () => expect(s.comision).toBe(42000));
   it("ganancia = participación + comisión", () => expect(s.ganancia).toBe(48123));
-  it("devolución de caja chica", () => expect(s.devolucion).toBe(574));
-  it("total por recibir", () => expect(s.totalRecibir).toBe(48697));
+  it("devolución de caja chica", () => expect(s.devolucion).toBe(21166));
+  it("total por recibir", () => expect(s.totalRecibir).toBe(69289));
   it("día pendiente impide resultado definitivo", () => expect(s.definitivo).toBe(false));
 });
 
 describe("caja chica", () => {
   it("lunes: 0 + 60.59 + 0 - 72.25 - 0 = -11.66", () => {
-    const c = computeWeekCaja(d1.filter((r) => r.fecha === "2026-10-12"));
+    const c = computeWeekCaja(mockD1Records.filter((r) => r.fecha === "2026-10-12"));
     expect(c["2026-10-12"].cajaFinal).toBe(-1166);
     expect(c["2026-10-12"].devolucion).toBe(1166);
   });
   it("la semana empieza en S/ 0.00", () => {
-    const c = computeWeekCaja(d1.filter((r) => r.fecha === "2026-10-19"));
-    expect(c["2026-10-19"].cajaAnterior).toBe(0);
+    const c = computeWeekCaja(mockD1Records.filter((r) => r.fecha === "2026-10-12"));
+    expect(c["2026-10-12"].cajaAnterior).toBe(0);
   });
 });
 

@@ -114,26 +114,34 @@ export function cajaAnteriorFor(weekRecords: DailyRecord[], fecha: ISODate): Cen
 }
 
 /**
- * REGLA PRINCIPAL DE SIGNOS EN CAJA CHICA:
+ * REGLA PRINCIPAL DE SIGNOS EN CAJA CHICA Y VINCULACIÓN POR PERIODO:
  * - POSITIVO (cajaFinal > 0): CONDUCTOR DEBE A LA EMPRESA
  * - NEGATIVO (cajaFinal < 0): LA EMPRESA DEBE AL CONDUCTOR
  * - CERO (cajaFinal = 0): CAJA CHICA AL DÍA (SIN DEUDA)
  *
  * Devuelve el saldo neto acumulado restando únicamente las transacciones que han sido APROBADAS o CONFIRMADAS.
  */
-export function computeNetPendingBalance(cajaFinal: Cents, transactions: CashTransaction[] = []): {
+export function computeNetPendingBalance(
+  cajaFinal: Cents,
+  transactions: CashTransaction[] = [],
+  periodId?: ISODate
+): {
   cajaFinal: Cents;
   devolucionPendiente: Cents;
   deudaEmpresaAConductor: Cents;
   deudaConductorAEmpresa: Cents;
   aprobadoTotal: Cents;
 } {
-  const approvedDevoluciones = transactions
+  const periodTxs = periodId
+    ? transactions.filter((t) => !t.period_id || t.period_id === periodId)
+    : transactions;
+
+  const approvedDevoluciones = periodTxs
     .filter((t) => t.tipo === "devolucion_conductor" && (t.estado === "aprobado" || t.estado === "confirmado"))
     .reduce((s, t) => s + t.monto, 0);
 
-  const approvedReembolsos = transactions
-    .filter((t) => t.tipo === "reembolso_empresa" && (t.estado === "aprobado" || t.estado === "confirmado"))
+  const approvedReembolsos = periodTxs
+    .filter((t) => (t.tipo === "reembolso_empresa" || t.tipo === "solicitud_conductor") && (t.estado === "aprobado" || t.estado === "confirmado"))
     .reduce((s, t) => s + t.monto, 0);
 
   let devolucionPendiente = 0;

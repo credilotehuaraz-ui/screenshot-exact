@@ -18,7 +18,7 @@ export const Route = createFileRoute("/conductor/")({
 
 function DriverHome() {
   const driver = useCurrentDriver();
-  const { session, cashTransactions, requestCashReturn, updateCashTransactionStatus } = useApp();
+  const { session, cashTransactions, requestCashReturn, requestDriverRefund, updateCashTransactionStatus } = useApp();
   const recs = useDriverRecords(driver?.id);
   const today = todayLima();
   const [week, setWeek] = useState(weekStart(today));
@@ -68,13 +68,13 @@ function DriverHome() {
     setObsTx("");
   };
 
-  // Solicitar devolución a la Empresa cuando la caja es negativa
+  // Solicitar devolución a la Empresa cuando la caja es negativa (tipo: 'solicitud_conductor')
   const handleRequestCompanyReturn = () => {
     const cents = parseMoney(montoTx);
     if (!cents || cents <= 0) return toast.error("Ingresa un monto válido.");
 
     const montoFormatted = (cents / 100).toFixed(2);
-    requestCashReturn(driver.id, cents, obsTx);
+    requestDriverRefund(driver.id, cents, obsTx);
 
     const waMsg = encodeURIComponent(`Hola, solicito la devolución de caja chica a mi favor para ${driver.nombre} (${driver.placa}) por S/ ${montoFormatted}. ${obsTx ? `Nota: ${obsTx}` : ""}`);
     window.open(`https://wa.me/51969841802?text=${waMsg}`, "_blank");

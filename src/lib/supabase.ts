@@ -14,6 +14,31 @@ export const supabase = isSupabaseConfigured()
   : null;
 
 // ==========================================
+// Funciones de Autenticación Supabase Auth
+// ==========================================
+
+export async function signInWithSupabaseAuth(email: string, password: string) {
+  if (!supabase) return { data: null, error: new Error("Supabase no configurado") };
+  return await supabase.auth.signInWithPassword({ email, password });
+}
+
+export async function signOutFromSupabaseAuth() {
+  if (!supabase) return;
+  await supabase.auth.signOut();
+}
+
+export async function getSupabaseSession() {
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  return data.session;
+}
+
+export async function updateSupabasePassword(newPassword: string) {
+  if (!supabase) return { error: new Error("Supabase no configurado") };
+  return await supabase.auth.updateUser({ password: newPassword });
+}
+
+// ==========================================
 // Adaptadores y Mapeos de Datos para Supabase
 // ==========================================
 
@@ -71,6 +96,7 @@ export async function fetchRecordsFromSupabase(): Promise<DailyRecord[]> {
     recibido: r.recibido,
     peajes: r.peajes,
     gasolina: Array.isArray(r.gasolina) ? r.gasolina : [],
+    gastos: Array.isArray(r.gastos) ? r.gastos : (Array.isArray(r.gasolina) ? r.gasolina : []),
     obs: r.obs ?? "",
     updatedAt: r.updated_at,
     updatedBy: r.updated_by,
@@ -125,6 +151,7 @@ export async function saveRecordToSupabase(rec: DailyRecord): Promise<boolean> {
     recibido: rec.recibido,
     peajes: rec.peajes,
     gasolina: rec.gasolina,
+    gastos: rec.gastos || rec.gasolina,
     obs: rec.obs,
     updated_at: rec.updatedAt,
     updated_by: rec.updatedBy,

@@ -15,6 +15,9 @@ import {
   saveCashTransactionToSupabase,
   deleteDriverFromSupabase,
   deleteAdminUserFromSupabase,
+  signInWithSupabaseAuth,
+  signOutFromSupabaseAuth,
+  updateSupabasePassword,
 } from "./supabase";
 
 export type { Driver, AdminUser, AuditEntry, CashTransaction };
@@ -38,7 +41,7 @@ interface PersistedState {
   lastSaved: string | null;
 }
 
-const KEY = "control-cabify-store-v6";
+const KEY = "control-cabify-store-v7";
 const SUPERADMIN = { usuario: "superadmin", password: "superadmin123" };
 const DEFAULT_ADMIN = { usuario: "admin", password: "admin123" };
 
@@ -68,6 +71,7 @@ interface AppCtx extends PersistedState {
   setAdminUserActive: (id: string, activo: boolean) => void;
   requestCashReturn: (driverId: string, monto: number, obs?: string) => void;
   requestCompanyRefund: (driverId: string, monto: number, obs?: string) => void;
+  requestDriverRefund: (driverId: string, monto: number, obs?: string) => void;
   sendRefundReminder: (driverId: string, monto: number, obs?: string) => void;
   updateCashTransactionStatus: (id: string, estado: "pendiente" | "comprobante_enviado" | "en_revision" | "aprobado" | "confirmado" | "rechazado" | "no_encontrado") => void;
   changePassword: (current: string, next: string) => { ok: boolean; error?: string };
@@ -133,16 +137,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const login: AppCtx["login"] = useCallback(
     async (usuario, password) => {
-      await new Promise((r) => setTimeout(r, 250));
+      await new Promise((r) => setTimeout(r, 200));
       const u = usuario.trim().toLowerCase();
 
-      // 1. Validar Superadmin
+      // 1. Intentar inicio de sesión real vía Supabase Auth si el usuario ingresó un email
+      if (isSupabaseConfigured() && u.includes("@")) {
+        const authRes = await signInWithSupabaseAuth(u, password);
+        if (!authRes.error && authRes.data.user) {
+          const email = authRes.data.user.email?.toLowerCase();
+          const d = state.drivers.find((x) => x.email.toLowerCase() === email);
+          if (d) {
+            if (!d.activo) return { ok: false, error: "Tu cuenta está desactivada." };
+            setState((s) => ({ ...s, session: { role: "conductor", driverId: d.id, nombre: d.nombre } }));
+            return { ok: true, role: "conductor" };
+          }
+          const adm = state.admins.find((x) => x.email.toLowerCase() === email);
+          if (adm) {
+            if (!adm.activo) return { ok: false, error: "Tu cuenta de administrador está desactivada." };
+            setState((s) => ({ ...s, session: { role: "admin", nombre: adm.nombre } }));
+            return { ok: true, role: "admin" };
+          }
+        }
+      }
+
+      // 2. Validar Superadmin
       if (u === SUPERADMIN.usuario && password === SUPERADMIN.password) {
         setState((s) => ({ ...s, session: { role: "superadmin", nombre: "Super Administrador" } }));
         return { ok: true, role: "superadmin" };
       }
 
-      // 2. Validar Admin por defecto / lista de admins creados
+      // 3. Validar Admin por defecto / lista de admins
       if (u === DEFAULT_ADMIN.usuario && password === DEFAULT_ADMIN.password) {
         setState((s) => ({ ...s, session: { role: "admin", nombre: "Administrador Principal" } }));
         return { ok: true, role: "admin" };
@@ -155,7 +179,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return { ok: true, role: "admin" };
       }
 
-      // 3. Validar Conductor
+      // 4. Validar Conductor
       const d = state.drivers.find((x) => x.usuario === u || x.email.toLowerCase() === u);
       if (!d || d.password !== password) return { ok: false, error: "Usuario o contraseña incorrectos." };
       if (!d.activo) return { ok: false, error: "Tu cuenta está desactivada. Contacta al administrador." };
@@ -170,7 +194,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ...state,
       hydrated,
       login,
-      logout: () => setState((s) => ({ ...s, session: null })),
+      logout: () => {
+        signOutFromSupabaseAuth();
+        setState((s) => ({ ...s, session: null }));
+      },
       upsertRecord: (rec) => {
         const by = state.session?.nombre ?? "Sistema";
         const existing = state.records.find((x) => x.id === rec.id || (x.driverId === rec.driverId && x.fecha === rec.fecha));
@@ -335,6 +362,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
           saveCashTransactionToSupabase(tx);
         }
       },
+      requestDriverRefund: (driverId, monto, obs = "") => {
+        const tx: CashTransaction = {
+          id: `tx-${uid()}`,
+          driverId,
+          tipo: "solicitud_conductor",
+          monto,
+          estado: "pendiente",
+          fecha: new Date().toISOString().slice(0, 10),
+          obs,
+          createdAt: new Date().toISOString(),
+        };
+
+        setState((s) => ({
+          ...s,
+          cashTransactions: [tx, ...s.cashTransactions],
+        }));
+
+        if (isSupabaseConfigured()) {
+          saveCashTransactionToSupabase(tx);
+        }
+      },
       sendRefundReminder: (driverId, monto, obs = "") => {
         const tx: CashTransaction = {
           id: `tx-${uid()}`,
@@ -383,6 +431,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         if (isSupabaseConfigured()) {
           saveDriverToSupabase(updatedDriver);
+          updateSupabasePassword(next);
         }
 
         return { ok: true };

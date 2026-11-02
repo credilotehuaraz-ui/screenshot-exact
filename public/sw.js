@@ -1,10 +1,10 @@
-const CACHE_NAME = "control-cabify-v1";
+const CACHE_NAME = "control-cabify-v2";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
   "/favicon.ico",
-  "/icon-192.png",
-  "/icon-512.png"
+  "/icon-192.svg",
+  "/icon-512.svg"
 ];
 
 self.addEventListener("install", (event) => {
@@ -28,12 +28,22 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+
+  // EXCLUIR PETICIONES PRIVADAS DE SUPABASE, AUTH Y API DE LA CACHÉ PWA
+  if (
+    event.request.method !== "GET" ||
+    url.hostname.includes("supabase.co") ||
+    url.pathname.startsWith("/rest/") ||
+    url.pathname.startsWith("/auth/")
+  ) {
+    return;
+  }
 
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
+        if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith("http")) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache).catch(() => {});

@@ -82,6 +82,10 @@ ALTER TABLE public.cash_transactions ADD COLUMN IF NOT EXISTS ref_comprobante TE
 ALTER TABLE public.cash_transactions ADD COLUMN IF NOT EXISTS verified_at TIMESTAMPTZ;
 ALTER TABLE public.cash_transactions ADD COLUMN IF NOT EXISTS verified_by TEXT DEFAULT '';
 
+-- Eliminar restricciones CHECK antiguas que bloqueaban estados nuevos como 'confirmado' o 'comprobante_enviado'
+ALTER TABLE public.cash_transactions DROP CONSTRAINT IF EXISTS cash_transactions_estado_check;
+ALTER TABLE public.cash_transactions DROP CONSTRAINT IF EXISTS cash_transactions_tipo_check;
+
 -- Indices de Rendimiento
 CREATE INDEX IF NOT EXISTS idx_records_driver_fecha ON public.daily_records(driver_id, fecha);
 CREATE INDEX IF NOT EXISTS idx_audit_driver ON public.audit_log(driver_id);
